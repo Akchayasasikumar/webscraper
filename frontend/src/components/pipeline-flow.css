@@ -1,0 +1,144 @@
+/* PipelineFlow component styles */
+
+.pf-container {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 0;
+  padding: 20px 16px;
+  overflow-x: auto;
+  position: relative;
+}
+
+.pf-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 90px;
+  flex: 1;
+  position: relative;
+  opacity: 0.35;
+  transition: opacity 300ms ease;
+}
+
+.pf-step--done,
+.pf-step--active {
+  opacity: 1;
+}
+
+/* Connector line */
+.pf-connector {
+  position: absolute;
+  top: 18px;
+  right: 50%;
+  width: 100%;
+  height: 2px;
+  background: var(--border-strong);
+  z-index: 0;
+  transition: background 300ms ease;
+}
+.pf-connector--done {
+  background: var(--border-strong);
+}
+
+/* Step node (circle with number + icon) */
+.pf-step-node {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--bg-elevated);
+  border: 2px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+  transition: all 300ms ease;
+}
+
+.pf-step-number {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.pf-step-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+/* Step label */
+.pf-step-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-align: center;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  line-height: 1.3;
+  transition: color 300ms ease;
+  max-width: 80px;
+}
+
+/* Active indicator pulse ring */
+.pf-step-pulse {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, calc(-50% - 20px));
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  animation: ring-pulse 1.2s ease-out infinite;
+  pointer-events: none;
+  z-index: 2;
+}
+
+@keyframes ring-pulse {
+  0%   { box-shadow: 0 0 0 0 currentColor; opacity: 1; }
+  100% { box-shadow: 0 0 0 10px transparent; opacity: 0; }
+}
+
+/* ── Group color overrides ─────────────────────────────────────────── */
+.pf-step--normal.pf-step--done .pf-step-node,
+.pf-step--normal.pf-step--active .pf-step-node {
+  border-color: var(--info);
+  background: var(--info-dim);
+}
+.pf-step--normal.pf-step--active .pf-step-pulse { color: var(--info); }
+.pf-step--normal.pf-step--done .pf-step-label,
+.pf-step--normal.pf-step--active .pf-step-label { color: var(--info); }
+
+.pf-step--alarm.pf-step--done .pf-step-node,
+.pf-step--alarm.pf-step--active .pf-step-node {
+  border-color: var(--alarm);
+  background: var(--alarm-dim);
+}
+.pf-step--alarm.pf-step--active .pf-step-pulse { color: var(--alarm); }
+.pf-step--alarm.pf-step--done .pf-step-label,
+.pf-step--alarm.pf-step--active .pf-step-label { color: var(--alarm); }
+
+.pf-step--healing.pf-step--done .pf-step-node,
+.pf-step--healing.pf-step--active .pf-step-node {
+  border-color: var(--warn);
+  background: var(--warn-dim);
+}
+.pf-step--healing.pf-step--active .pf-step-pulse { color: var(--warn); }
+.pf-step--healing.pf-step--done .pf-step-label,
+.pf-step--healing.pf-step--active .pf-step-label { color: var(--warn); }
+
+.pf-step--healed.pf-step--done .pf-step-node,
+.pf-step--healed.pf-step--active .pf-step-node {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  box-shadow: 0 0 12px var(--accent-border);
+}
+.pf-step--healed.pf-step--active .pf-step-pulse { color: var(--accent); }
+.pf-step--healed.pf-step--done .pf-step-label,
+.pf-step--healed.pf-step--active .pf-step-label { color: var(--accent); }

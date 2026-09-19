@@ -1,0 +1,58 @@
+# ── Python ────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+.eggs/
+dist/
+build/
+*.egg
+
+# Virtual environments
+venv/
+.venv/
+env/
+.env
+
+# ── Database (do not push scraper.db — it's a local file) ─────────
+backend/scraper.db
+*.db
+*.sqlite
+*.sqlite3
+
+# ── Playwright browser binaries (too large for GitHub) ────────────
+# Playwright downloads browsers to AppData automatically
+# Run: python -m playwright install chromium  (after cloning)
+
+# ── Debug / temporary scripts ─────────────────────────────────────
+backend/debug_site.py
+backend/check_components.py
+backend/test_batch_check.txt
+
+# ── Environment variables (keep your API keys private!) ───────────
+.env
+backend/.env
+# .env.example is safe to push (it has no real keys)
+
+# ── Node / Frontend ───────────────────────────────────────────────
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# ── IDE / Editor ──────────────────────────────────────────────────
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# ── OS files ──────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Logs ──────────────────────────────────────────────────────────
+*.log

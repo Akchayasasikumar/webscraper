@@ -1,0 +1,3 @@
+﻿retrieve all the lipstick prices
+get every product name on the page
+show me foundation ratings

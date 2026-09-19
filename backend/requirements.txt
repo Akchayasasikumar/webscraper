@@ -1,0 +1,29 @@
+# ─────────────────────────────────────────────────────────────────
+# Core dependencies (REQUIRED — install these first)
+# ─────────────────────────────────────────────────────────────────
+fastapi==0.111.0
+uvicorn[standard]==0.29.0
+beautifulsoup4==4.12.3
+lxml==5.2.2
+requests==2.32.3
+pydantic>=2.7.1
+python-multipart==0.0.9
+
+# Playwright — for rendering JavaScript-heavy external websites
+# After installing, run: python -m playwright install chromium
+playwright>=1.44.0
+
+# ─────────────────────────────────────────────────────────────────
+# Optional — Quantum Ranking (Qiskit QAOA)
+# Uncomment these lines if you want real quantum circuit ranking.
+# Without this, the system uses classical scoring (still works).
+# ─────────────────────────────────────────────────────────────────
+# qiskit==1.1.0
+# qiskit-aer==0.14.1
+
+# ─────────────────────────────────────────────────────────────────
+# Optional — LLM Support (Claude by Anthropic)
+# Uncomment if you have an ANTHROPIC_API_KEY.
+# Without this, the system uses built-in heuristic engines (still works).
+# ─────────────────────────────────────────────────────────────────
+# anthropic==0.28.0

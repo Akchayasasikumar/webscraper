@@ -1,0 +1,67 @@
+/* PipelineFlow */
+.pf-track {
+  display: flex; align-items: flex-start;
+  padding: 18px 14px; gap: 0; overflow-x: auto;
+}
+.pf-step {
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  flex: 1; min-width: 76px; position: relative;
+  opacity: 0.28; transition: opacity 280ms ease;
+}
+.pf-step--done, .pf-step--active { opacity: 1; }
+
+.pf-line {
+  position: absolute; top: 17px; right: 50%; width: 100%; height: 2px;
+  background: var(--border-strong); z-index: 0; transition: background 280ms;
+}
+
+.pf-node {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--bg-elevated); border: 2px solid var(--border-subtle);
+  display: flex; align-items: center; justify-content: center;
+  position: relative; z-index: 1; transition: all 280ms ease;
+}
+.pf-num {
+  font-family: var(--font-mono); font-size: 0.6rem; font-weight: 600;
+  color: var(--text-muted); position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+}
+.pf-icon { font-size: 13px; }
+.pf-ring {
+  position: absolute; inset: -6px; border-radius: 50%;
+  animation: pf-pulse 1.1s ease-out infinite; pointer-events: none;
+}
+@keyframes pf-pulse { 0%{box-shadow:0 0 0 0 currentColor;opacity:1} 100%{box-shadow:0 0 0 8px transparent;opacity:0} }
+
+.pf-label {
+  font-size: 0.6rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.04em; color: var(--text-muted); text-align: center;
+  max-width: 70px; line-height: 1.3; transition: color 280ms;
+}
+
+/* Group colors */
+.pf-step--normal.pf-step--done .pf-node,
+.pf-step--normal.pf-step--active .pf-node  { border-color: var(--info);   background: var(--info-dim); }
+.pf-step--normal.pf-step--active .pf-ring  { color: var(--info); }
+.pf-step--normal.pf-step--done .pf-label,
+.pf-step--normal.pf-step--active .pf-label { color: var(--info); }
+
+.pf-step--alarm.pf-step--done .pf-node,
+.pf-step--alarm.pf-step--active .pf-node   { border-color: var(--alarm);  background: var(--alarm-dim); }
+.pf-step--alarm.pf-step--active .pf-ring   { color: var(--alarm); }
+.pf-step--alarm.pf-step--done .pf-label,
+.pf-step--alarm.pf-step--active .pf-label  { color: var(--alarm); }
+
+.pf-step--healing.pf-step--done .pf-node,
+.pf-step--healing.pf-step--active .pf-node { border-color: var(--warn);   background: var(--warn-dim); }
+.pf-step--healing.pf-step--active .pf-ring { color: var(--warn); }
+.pf-step--healing.pf-step--done .pf-label,
+.pf-step--healing.pf-step--active .pf-label{ color: var(--warn); }
+
+.pf-step--healed.pf-step--done .pf-node,
+.pf-step--healed.pf-step--active .pf-node  {
+  border-color: var(--accent); background: var(--accent-dim);
+  box-shadow: 0 0 10px var(--accent-border);
+}
+.pf-step--healed.pf-step--active .pf-ring  { color: var(--accent); }
+.pf-step--healed.pf-step--done .pf-label,
+.pf-step--healed.pf-step--active .pf-label { color: var(--accent); }
