@@ -431,5 +431,4 @@ Extension sends URL to the scraper API automatically
 
 ---
 
-*Built as a college project — Semester 1 of 2.*  
-*GitHub: https://github.com/Vickieee19/webscraper*
+
