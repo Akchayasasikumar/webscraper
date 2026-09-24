@@ -2,10 +2,44 @@
 
 const BASE = 'http://localhost:8000'
 
+function authHeaders(extra = {}) {
+  const token = localStorage.getItem('scraper_token')
+  return token ? { ...extra, Authorization: `Bearer ${token}` } : extra
+}
+
+async function parseError(res) {
+  const err = await res.json().catch(() => ({ detail: res.statusText }))
+  throw new Error(err.detail || res.statusText)
+}
+
+export async function signup(email, password) {
+  const res = await fetch(`${BASE}/auth/signup`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  })
+  if (!res.ok) await parseError(res)
+  return res.json()
+}
+
+export async function login(email, password) {
+  const res = await fetch(`${BASE}/auth/login`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  })
+  if (!res.ok) await parseError(res)
+  return res.json()
+}
+
+export async function getCurrentUser() {
+  const res = await fetch(`${BASE}/auth/me`, { headers: authHeaders() })
+  if (!res.ok) await parseError(res)
+  return res.json()
+}
+
 export async function runQuery(url, query) {
   const res = await fetch(`${BASE}/scraper/query`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: authHeaders({ 'Content-Type': 'application/json' }),
     body: JSON.stringify({ url, query }),
   })
   if (!res.ok) {
@@ -19,7 +53,7 @@ export async function runBatch(url, file) {
   const form = new FormData()
   form.append('url', url)
   form.append('file', file)
-  const res = await fetch(`${BASE}/scraper/batch`, { method: 'POST', body: form })
+  const res = await fetch(`${BASE}/scraper/batch`, { method: 'POST', headers: authHeaders(), body: form })
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }))
     throw new Error(err.detail || res.statusText)
@@ -32,19 +66,19 @@ export function batchDownloadUrl(batchId) {
 }
 
 export async function getStatus() {
-  const res = await fetch(`${BASE}/scraper/status`)
+  const res = await fetch(`${BASE}/scraper/status`, { headers: authHeaders() })
   if (!res.ok) throw new Error(res.statusText)
   return res.json()
 }
 
 export async function simulateChange() {
-  const res = await fetch(`${BASE}/demo/simulate-change`, { method: 'POST' })
+  const res = await fetch(`${BASE}/demo/simulate-change`, { method: 'POST', headers: authHeaders() })
   if (!res.ok) throw new Error(res.statusText)
   return res.json()
 }
 
 export async function getHistory() {
-  const res = await fetch(`${BASE}/scraper/history`)
+  const res = await fetch(`${BASE}/scraper/history`, { headers: authHeaders() })
   if (!res.ok) throw new Error(res.statusText)
   return res.json()
 }
