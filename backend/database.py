@@ -26,6 +26,13 @@ def get_connection() -> sqlite3.Connection:
 def init_db() -> None:
     conn = get_connection()
     conn.executescript("""
+        CREATE TABLE IF NOT EXISTS users (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            email           TEXT NOT NULL UNIQUE,
+            password_hash   TEXT NOT NULL,
+            created_at      TEXT NOT NULL
+        );
+
         CREATE TABLE IF NOT EXISTS healing_history (
             id                  INTEGER PRIMARY KEY AUTOINCREMENT,
             timestamp           TEXT    NOT NULL,
@@ -65,8 +72,50 @@ def init_db() -> None:
             results_json        TEXT    NOT NULL
         );
     """)
+    columns = {
+        row["name"] for row in conn.execute("PRAGMA table_info(healing_history)").fetchall()
+    }
+    if "user_id" not in columns:
+        conn.execute("ALTER TABLE healing_history ADD COLUMN user_id INTEGER")
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_healing_history_user_id ON healing_history(user_id)"
+    )
     conn.commit()
     conn.close()
+
+
+# -- Users --------------------------------------------------------------------
+
+def create_user(email: str, password_hash: str) -> dict[str, Any]:
+    conn = get_connection()
+    cur = conn.execute(
+        "INSERT INTO users (email, password_hash, created_at) VALUES (?,?,?)",
+        (email, password_hash, datetime.utcnow().isoformat()),
+    )
+    conn.commit()
+    user_id = cur.lastrowid
+    conn.close()
+    return {"id": user_id, "email": email}
+
+
+def get_user_by_email(email: str) -> dict[str, Any] | None:
+    conn = get_connection()
+    row = conn.execute(
+        "SELECT id, email, password_hash, created_at FROM users WHERE email=?",
+        (email,),
+    ).fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+
+def get_user_by_id(user_id: int) -> dict[str, Any] | None:
+    conn = get_connection()
+    row = conn.execute(
+        "SELECT id, email, created_at FROM users WHERE id=?",
+        (user_id,),
+    ).fetchone()
+    conn.close()
+    return dict(row) if row else None
 
 
 # ── Selector store ────────────────────────────────────────────────────────────
@@ -120,16 +169,18 @@ def insert_history(
     final_status: str,
     failure_reason: str = "",
     result_items: list[str] | None = None,
+    user_id: int | None = None,
 ) -> int:
     conn = get_connection()
     cur = conn.execute(
         """INSERT INTO healing_history
-           (timestamp, url, query, field, filter_keyword, multiple,
+           (user_id, timestamp, url, query, field, filter_keyword, multiple,
             old_container_sel, old_field_sel, new_container_sel, new_field_sel,
             candidates_json, scores_json, method, validation_ok, final_status,
             failure_reason, result_items_json)
-           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
         (
+            user_id,
             datetime.utcnow().isoformat(),
             url, query,
             interpreted.get("field"), interpreted.get("filter_keyword"),
@@ -153,10 +204,11 @@ def insert_history(
     return row_id
 
 
-def get_history(limit: int = 50) -> list[dict]:
+def get_history(user_id: int, limit: int = 50) -> list[dict]:
     conn = get_connection()
     rows = conn.execute(
-        "SELECT * FROM healing_history ORDER BY id DESC LIMIT ?", (limit,)
+        "SELECT * FROM healing_history WHERE user_id=? ORDER BY id DESC LIMIT ?",
+        (user_id, limit),
     ).fetchall()
     conn.close()
     result = []

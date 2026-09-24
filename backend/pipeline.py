@@ -51,6 +51,7 @@ def run_query(
     query: str,
     html: str,
     state: dict,
+    user_id: int | None = None,
 ) -> dict[str, Any]:
     """
     Run the full DETECT→RESUME pipeline for one query.
@@ -126,6 +127,7 @@ def run_query(
             candidates=[], scores=[], method="none",
             validation_ok=True, final_status="ok",
             result_items=items,
+            user_id=user_id,
         )
         return result
 
@@ -158,6 +160,7 @@ def run_query(
             candidates=[], scores=[], method="none",
             validation_ok=False, final_status="no_candidates",
             failure_reason=result["failure_reason"],
+            user_id=user_id,
         )
         state["status"] = "failed"
         return result
@@ -222,6 +225,7 @@ def run_query(
             candidates=candidates, scores=ranked, method=method,
             validation_ok=True, final_status="healed",
             result_items=full_items,
+            user_id=user_id,
         )
 
         _set(state, "REPAIRED", {
@@ -241,6 +245,7 @@ def run_query(
             candidates=candidates, scores=ranked, method=method,
             validation_ok=False, final_status="validation_failed",
             failure_reason=result["failure_reason"],
+            user_id=user_id,
         )
         state["status"] = "failed"
         logger.error("Healing failed: no valid selector found.")

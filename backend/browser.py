@@ -34,8 +34,12 @@ def is_demo_url(url: str) -> bool:
     """Check if URL targets the internal demo endpoint."""
     if not url:
         return False
-    u = url.lower()
-    return "localhost" in u or "127.0.0.1" in u or "/demo/" in u
+    parsed = urlparse(url)
+    hostname = (parsed.hostname or "").lower()
+    return (
+        hostname in {"localhost", "127.0.0.1"}
+        and parsed.path.rstrip("/") == "/demo/products"
+    )
 
 
 def fetch_html_requests(url: str, timeout: int = 15) -> str:
