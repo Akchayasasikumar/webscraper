@@ -3,6 +3,7 @@ test_pipeline.py — End-to-end integration tests.
 Run: python -X utf8 tests/test_pipeline.py
 """
 import sys, os
+from unittest.mock import patch
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
@@ -28,6 +29,41 @@ HTML_B = _render_structure_b()
 
 DEMO_URL = "http://localhost:8000/demo/products"
 
+MYNTRA_HTML = """
+<html><body>
+  <nav class="desktop-navContent">
+    <span>Rs. 99</span><span>50% OFF</span><span>Delivery in 2 days</span>
+  </nav>
+  <ul>
+    <li class="product-base">
+      <div class="product-ratingsContainer">4.2 | 10</div>
+      <div class="product-price"><span>Rs. 579</span></div>
+    </li>
+    <li class="product-base">
+      <div class="product-ratingsContainer">4.6 | 1.5k</div>
+      <div class="product-price">
+        <span>
+          <span class="product-discountedPrice">Rs. 719</span>
+          <span class="product-strike">Rs. 1199</span>
+        </span>
+        <span class="product-discountPercentage">(Rs. 480 OFF)</span>
+      </div>
+    </li>
+    <li class="product-base">
+      <div class="product-ratingsContainer">4.4 | 7k</div>
+      <div class="product-price">
+        <span>
+          <span class="product-discountedPrice">Rs. 284</span>
+          <span class="product-strike">Rs. 999</span>
+        </span>
+        <span class="product-discountPercentage">(72% OFF)</span>
+      </div>
+    </li>
+  </ul>
+  <aside>Rs. 500 delivery charge</aside>
+</body></html>
+"""
+
 
 def banner(msg: str):
     print(f"\n{'='*60}\n{msg}\n{'='*60}")
@@ -50,6 +86,88 @@ def test_query_interpreter():
     assert r3["field"] == "rating", f"Expected field=rating, got {r3['field']}"
     print("  ✓ 'show me foundation ratings' ->", r3)
 
+    r4 = interpret("Retrieve all product prices on this page")
+    assert r4["field"] == "price", f"Expected field=price, got {r4['field']}"
+    assert r4["filter_keyword"] is None, f"Expected no filter, got {r4['filter_keyword']}"
+    assert r4["multiple"] is True
+    print("  ✓ Myntra query has no accidental filter ->", r4)
+
+    with patch.dict(os.environ, {"ANTHROPIC_API_KEY": "test"}):
+        with patch(
+            "query_interpreter._llm_interpret",
+            return_value={"field": "price", "filter_keyword": "this", "multiple": True},
+        ):
+            llm_result = interpret("Retrieve all product prices on this page")
+    assert llm_result["filter_keyword"] is None, llm_result
+    print("  ✓ LLM stop-word filter is discarded")
+
+
+def test_myntra_product_prices():
+    banner("TEST: Myntra Product Price Extraction")
+    query = "Retrieve all product prices on this page"
+    interpreted = interpret(query)
+    generated = generate_candidates(MYNTRA_HTML, interpreted, {})
+    candidate = next(
+        (
+            item for item in generated["candidates"]
+            if item["container_selector"] == "li.product-base"
+        ),
+        None,
+    )
+    assert candidate, f"Expected a product-card candidate: {generated['candidates']}"
+    name_candidates = generate_candidates(MYNTRA_HTML, {"field": "name"}, {})
+    assert not any(
+        item.get("field_selector", "").startswith(".product-discountedPrice")
+        for item in name_candidates["candidates"]
+    ), "Price-specific selectors must not be used for name queries"
+
+    validation = validate(MYNTRA_HTML, candidate, interpreted)
+    assert validation["valid"], validation["reason"]
+    assert validation["count"] == 3, validation
+
+    raw = extract(
+        MYNTRA_HTML,
+        candidate["container_selector"],
+        candidate["field_selector"],
+        interpreted["filter_keyword"],
+    )
+    failed, reason = is_failure(
+        raw,
+        interpreted,
+        candidate["container_selector"],
+        candidate["field_selector"],
+    )
+    assert not failed, reason
+    items = extract_filtered(
+        MYNTRA_HTML,
+        candidate["container_selector"],
+        candidate["field_selector"],
+        interpreted["filter_keyword"],
+    )
+    expected = ["Rs. 579", "Rs. 719", "Rs. 284"]
+    assert items == expected, f"Expected current product prices {expected}, got {items}"
+    print("  ✓ Product-only prices extracted; navigation, rating, MRP and discount values excluded")
+
+    init_db()
+    state = {
+        "status": "idle", "pipeline_step": "", "pipeline_steps_done": [],
+        "current_query": "", "interpreted": {}, "last_items": [],
+        "new_selectors": None, "error": None,
+    }
+    url = "https://www.myntra.com/myntra-fashion-store?f=product-list"
+    first = run_query(url, query, MYNTRA_HTML, state)
+    assert first["final_status"] == "healed", first
+    assert first["items"] == expected, first["items"]
+
+    second_state = {
+        "status": "idle", "pipeline_step": "", "pipeline_steps_done": [],
+        "current_query": "", "interpreted": {}, "last_items": [],
+        "new_selectors": None, "error": None,
+    }
+    second = run_query(url, query, MYNTRA_HTML, second_state)
+    assert second["final_status"] == "ok", second
+    assert second["items"] == expected, second["items"]
+    print("  ✓ Self-healed selector is reused for subsequent extraction")
 
 def test_scraper_structure_a():
     banner("TEST: Scraper on Structure A")
@@ -192,6 +310,7 @@ def test_batch():
 
 if __name__ == "__main__":
     test_query_interpreter()
+    test_myntra_product_prices()
     test_scraper_structure_a()
     test_candidate_generator()
     test_quantum_optimizer()

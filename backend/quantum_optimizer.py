@@ -19,7 +19,11 @@ from bs4 import BeautifulSoup
 
 logger = logging.getLogger(__name__)
 
-_PRICE_RE  = re.compile(r"[₹$£€¥₩][\d,\.\s]+|\d[\d,\.]+\s*(USD|EUR|INR|GBP)", re.I)
+_PRICE_RE  = re.compile(
+    r"[₹$£€¥₩][\d,\.\s]+|\d[\d,\.]+\s*(USD|EUR|INR|GBP)"
+    r"|Rs\.?\s*[\d,\.]+|INR\s*[\d,\.]+",
+    re.I,
+)
 _RATING_RE = re.compile(r"^\d(\.\d+)?$")
 
 

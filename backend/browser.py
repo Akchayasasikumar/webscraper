@@ -10,7 +10,7 @@ from __future__ import annotations
 import logging
 import os
 import re
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, urlparse
 
 import requests
 import demo_site
@@ -39,6 +39,22 @@ def is_demo_url(url: str) -> bool:
     return (
         hostname in {"localhost", "127.0.0.1"}
         and parsed.path.rstrip("/") == "/demo/products"
+    )
+
+
+def _is_myntra_filtered_listing(url: str) -> bool:
+    parsed = urlparse(url)
+    hostname = (parsed.hostname or "").lower()
+    return (
+        (hostname == "myntra.com" or hostname.endswith(".myntra.com"))
+        and "f" in parse_qs(parsed.query)
+    )
+
+
+def _has_myntra_product_cards(html: str) -> bool:
+    return bool(
+        re.search(r'<li\b[^>]*\bclass=["\'][^"\']*\bproduct-base\b', html, re.I)
+        and re.search(r'<div\b[^>]*\bclass=["\'][^"\']*\bproduct-price\b', html, re.I)
     )
 
 
@@ -99,6 +115,14 @@ def fetch_html_playwright(url: str, timeout_seconds: int = 20) -> str:
             timeout_ms = timeout_seconds * 1000
             try:
                 page.goto(url, wait_until="domcontentloaded", timeout=timeout_ms)
+                if _is_myntra_filtered_listing(url):
+                    try:
+                        page.wait_for_selector(
+                            "li.product-base div.product-price",
+                            timeout=min(timeout_ms, 10000),
+                        )
+                    except PlaywrightTimeout:
+                        logger.warning("Myntra product cards did not appear before the render timeout.")
                 # Wait briefly for dynamic elements or hydration
                 try:
                     page.wait_for_load_state("networkidle", timeout=3000)
@@ -147,4 +171,10 @@ def get_rendered_html(url: str, timeout_seconds: int = 20) -> str:
         return demo_site.get_demo_html()
 
     # Generic browser loading for external websites
-    return fetch_html_playwright(url, timeout_seconds=timeout_seconds)
+    html = fetch_html_playwright(url, timeout_seconds=timeout_seconds)
+    if _is_myntra_filtered_listing(url) and not _has_myntra_product_cards(html):
+        raise BrowserFetchError(
+            "Myntra's filtered listing did not expose rendered product cards. "
+            "The page may be restricted or its product content may not have loaded."
+        )
+    return html

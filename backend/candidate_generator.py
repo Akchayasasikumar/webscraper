@@ -28,6 +28,11 @@ _PRICE_RE  = re.compile(
     re.I
 )
 _RATING_RE = re.compile(r"^\d(\.\d+)?$")
+_MYNTRA_CONTAINER_SELECTOR = "li.product-base"
+_MYNTRA_PRICE_SELECTOR = (
+    ".product-discountedPrice, "
+    "div.product-price > span:not(.product-discountPercentage):not(:has(.product-strike))"
+)
 
 # Field-specific class/id hint words
 _FIELD_HINTS: dict[str, list[str]] = {
@@ -110,6 +115,17 @@ def _heuristic_candidates(
 
     soup = BeautifulSoup(html, "lxml")
     scored: list[tuple[float, dict[str, str]]] = []
+    product_cards = soup.select(_MYNTRA_CONTAINER_SELECTOR)
+    priced_product_cards = [
+        card for card in product_cards
+        if card.select_one("div.product-price")
+    ]
+    preferred_product_candidate = None
+    if field == "price" and len(product_cards) >= 2 and len(priced_product_cards) >= 2:
+        preferred_product_candidate = {
+            "container_selector": _MYNTRA_CONTAINER_SELECTOR,
+            "field_selector": _MYNTRA_PRICE_SELECTOR,
+        }
 
     # Walk every element looking for field matches
     for el in soup.find_all(True):
@@ -205,7 +221,13 @@ def _heuristic_candidates(
             seen[key] = score
 
     ranked = sorted(seen.items(), key=lambda x: x[1], reverse=True)
-    return [dict(zip(["container_selector", "field_selector"], k)) for k, _ in ranked[:5]]
+    candidates = [dict(zip(["container_selector", "field_selector"], k)) for k, _ in ranked[:5]]
+    if preferred_product_candidate:
+        candidates = [preferred_product_candidate] + [
+            candidate for candidate in candidates
+            if candidate != preferred_product_candidate
+        ][:4]
+    return candidates
 
 
 

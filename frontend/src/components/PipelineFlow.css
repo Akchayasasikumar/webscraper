@@ -65,3 +65,28 @@
 .pf-step--healed.pf-step--active .pf-ring  { color: var(--accent); }
 .pf-step--healed.pf-step--done .pf-label,
 .pf-step--healed.pf-step--active .pf-label { color: var(--accent); }
+
+.pf-track { padding: 25px 18px 20px; }
+.pf-step { min-width: 86px; gap: 8px; opacity: .42; }
+.pf-node {
+  width: 38px;
+  height: 38px;
+  background: var(--bg-elevated);
+  border-color: var(--border-subtle);
+}
+.pf-num { top: -17px; color: var(--text-muted); }
+.pf-label { color: var(--text-muted); font-size: .62rem; }
+.pf-line { top: 19px; background: var(--border-strong); }
+.pf-step--normal.pf-step--done .pf-node,
+.pf-step--normal.pf-step--active .pf-node { background: var(--info-dim); }
+.pf-step--alarm.pf-step--done .pf-node,
+.pf-step--alarm.pf-step--active .pf-node { background: var(--alarm-dim); }
+.pf-step--healing.pf-step--done .pf-node,
+.pf-step--healing.pf-step--active .pf-node { background: var(--warn-dim); }
+.pf-step--healed.pf-step--done .pf-node,
+.pf-step--healed.pf-step--active .pf-node { background: var(--accent-dim); box-shadow: 0 2px 8px rgba(0,0,0,.18); }
+
+@media (max-width: 600px) {
+  .pf-track { padding: 24px 14px 18px; }
+  .pf-step { min-width: 78px; }
+}

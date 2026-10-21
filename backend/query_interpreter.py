@@ -37,7 +37,7 @@ _MULTIPLE_KEYWORDS = [
 _STOP_WORDS = {
     "retrieve", "get", "find", "fetch", "extract", "show", "list", "collect",
     "all", "every", "each", "the", "a", "an", "of", "on", "in", "at",
-    "from", "with", "for", "me", "please", "page", "site", "website",
+    "from", "with", "for", "me", "please", "page", "site", "website", "this",
     "give", "display", "return",
     # Common product category words — should not become filter_keyword
     "jersey", "jerseys", "shirt", "shirts", "kit", "kits", "product", "products",
@@ -138,6 +138,11 @@ def interpret(query: str) -> dict[str, Any]:
     if os.environ.get("ANTHROPIC_API_KEY"):
         try:
             result = _llm_interpret(query)
+            filter_keyword = result.get("filter_keyword")
+            if filter_keyword:
+                filter_tokens = re.findall(r"[a-zA-Z]+", str(filter_keyword).lower())
+                if not filter_tokens or all(token in _STOP_WORDS for token in filter_tokens):
+                    result["filter_keyword"] = None
             result["source"] = "llm"
             logger.info("Query interpreted via LLM: %s", result)
             return result

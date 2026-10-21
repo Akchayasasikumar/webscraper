@@ -15,7 +15,11 @@ from __future__ import annotations
 import re
 from typing import Any
 
-_PRICE_RE  = re.compile(r"[₹$£€¥₩][\d,\.\s]+|\d[\d,\.]+\s*(USD|EUR|INR|GBP)", re.I)
+_PRICE_RE  = re.compile(
+    r"[₹$£€¥₩][\d,\.\s]+|\d[\d,\.]+\s*(USD|EUR|INR|GBP)"
+    r"|Rs\.?\s*[\d,\.]+|INR\s*[\d,\.]+",
+    re.I,
+)
 _RATING_RE = re.compile(r"^\d(\.\d+)?$")
 
 

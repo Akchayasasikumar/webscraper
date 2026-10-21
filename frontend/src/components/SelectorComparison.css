@@ -26,3 +26,21 @@
 }
 .sc-tag--accent { border-color: var(--accent-border); color: var(--accent); background: var(--accent-dim); }
 .sc-tag-key { color: var(--text-muted); }
+
+.sc-panel--healed { box-shadow: 0 2px 9px rgba(8,127,91,.07); }
+.sc-panel--alarm { box-shadow: 0 2px 9px rgba(194,65,58,.07); }
+.sc-panel .panel-body { padding: 20px; }
+.sc-row { gap: 8px; }
+.sc-label-row { justify-content: space-between; }
+.sc-selector-pair { gap: 8px; }
+.sc-pill { align-items: flex-start; }
+.sc-pill .sel-code { flex: 1; min-width: 0; }
+.sc-tag { padding: 5px 9px; border-radius: 6px; background: var(--bg-elevated); }
+.sc-tag--accent { background: var(--accent-dim); }
+
+@media (max-width: 600px) {
+  .sc-panel .panel-body { padding: 15px; }
+  .sc-pill { flex-direction: column; gap: 4px; }
+  .sc-pill-label { width: auto; }
+  .sc-pill .sel-code { width: 100%; }
+}
